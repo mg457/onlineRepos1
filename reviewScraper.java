@@ -16,6 +16,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 /*
  *sample code from site using Jsoup library:
@@ -38,6 +39,7 @@ public class ReviewScraper {
 		// scrapeHiltonGarden();
 		// scrapeiTunes();
 		scrapeGooglePlay();
+
 	}
 
 	/**
@@ -240,7 +242,8 @@ public class ReviewScraper {
 		}
 
 		Element ten2 = eight.getElement(1);
-		System.out.println("children of element:  " + ten2.getElementCount() + "\n");
+		System.out.println("children of element:  " + ten2.getElementCount()
+				+ "\n");
 		Element eleven2;
 		for (int i = 0; i < ten2.getElementCount(); i++) {
 			eleven2 = ten2.getElement(i); // class="expand-pages-container"
@@ -253,13 +256,15 @@ public class ReviewScraper {
 				Element authorDate = eleven2.getElement(0).getElement(1)
 						.getElement(0).getElement(0);
 				String header = makeString(authorDate);
-				//System.out.println(header);
-			
-				String date = "June 24, 2015";
+				// System.out.println(header);
+
+				String date = "June 29, 2015";
 				if (header.contains(date)) { // specify date (will need to
-											// separate review body node to make
-											// sure doesn't contain feedback)
-					//System.out.println("review: \n" + makeString(eleven2));
+												// separate review body node to
+												// make
+												// sure doesn't contain
+												// feedback)
+					// System.out.println("review: \n" + makeString(eleven2));
 					Element review = eleven2.getElement(0).getElement(2);
 					System.out.println(header + "\n" + makeString(review));
 					// System.out.println(header); //when "Newest" isn't
@@ -285,18 +290,19 @@ public class ReviewScraper {
 
 	}
 
-	public static void scrapeGooglePlay2() throws ParserConfigurationException {
+	public static void scrapeGooglePlay2(String url) throws IOException,
+			ParserConfigurationException, SAXException {
+		// String url =
+		// "https://play.google.com/store/apps/details?id=com.hilton.android.hhonors&hl=en";
 		// kit = new HTMLEditorKit();
-		// html =
-		// getUrl("https://play.google.com/store/apps/details?id=com.hilton.android.hhonors&hl=en",
-		// kit);
-		//http://www.rgagnon.com/javadetails/java-0530.html
+		// html = getUrl(url, kit);
+		// http://www.rgagnon.com/javadetails/java-0530.html
 
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document doc = builder.parse(url);
 		DOMImplementation impl = builder.getDOMImplementation();
-
-		Document d = impl.createDocument(null, null, null);//any way to create doc in 1 step using url?
+		System.out.println(doc.getDocumentURI());
 
 	}
 
