@@ -1,7 +1,7 @@
 package reviewScraper.java;
 
 import java.net.*;
-import java.util.Enumeration;
+//import java.util.Enumeration;
 import java.io.*;
 
 import javax.swing.text.AttributeSet;
@@ -11,12 +11,16 @@ import javax.swing.text.html.*;
 //import javax.swing.text.AttributeSet;
 import javax.swing.text.Element;
 import javax.swing.event.DocumentEvent;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
+//import javax.xml.parsers.DocumentBuilder;
+//import javax.xml.parsers.DocumentBuilderFactory;
+//import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.*;
 
 import org.w3c.dom.*;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import java.util.*;
 
 /*
  *sample code from site using Jsoup library:
@@ -31,6 +35,9 @@ public class ReviewScraper {
 
 	private static HTMLDocument html;
 	private static HTMLEditorKit kit;
+	
+	
+	private ArrayList<IOSReview> ios;
 
 	public ReviewScraper() {
 	} // constructor for junit testing
@@ -38,7 +45,9 @@ public class ReviewScraper {
 	public static void main(String[] args) {
 		// scrapeHiltonGarden();
 		// scrapeiTunes();
-		scrapeGooglePlay();
+		//scrapeGooglePlay();
+		
+		//https://itunes.apple.com/rss/customerreviews/id=635150066/xml
 
 	}
 
@@ -299,12 +308,100 @@ public class ReviewScraper {
 		// http://www.rgagnon.com/javadetails/java-0530.html
 
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+		// added 6/30
+		factory.setValidating(false);
+		factory.setNamespaceAware(true);
+		factory.setIgnoringComments(false);
+		factory.setIgnoringElementContentWhitespace(false);
+		factory.setExpandEntityReferences(false);
 		DocumentBuilder builder = factory.newDocumentBuilder();
-		Document doc = builder.parse(url);
+		//Document doc = builder.parse(new InputSource(new StringReader(url))); // with
+																				// this,
+																				// gets
+																				// different
+																				// SAXParseException
+																				// "content is not allowed in prolog"
+		URL urlObj = null;
+		try {
+			urlObj = new URL(url);
+		} catch (MalformedURLException e) {
+			System.out.println("The url was malformed!");
+		}
+		Document doc = null;
+		
+		try {
+			//doc.putProperty("IgnoreCharsetDirective", Boolean.TRUE);
+			InputStream is = urlObj.openConnection().getInputStream();
+			doc = builder.parse(is);
+			
+		} catch (IOException e) {
+			System.out.println("There was an error connecting to the URL");}
+		
+
+		// Document doc = builder.parse(url); //SAXParseException
+											// "The markup in the document preceding the root element must be well-formed."
 		DOMImplementation impl = builder.getDOMImplementation();
-		System.out.println(doc.getDocumentURI());
+		//System.out.println(doc.getDocumentURI());
+		
+		
 
 	}
+	
+	public static ArrayList<IOSReview> scrapeios(String url) throws IOException,
+	ParserConfigurationException, SAXException {
+		ArrayList<IOSReview> toReturn = new ArrayList<IOSReview>();
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		// added 6/30
+		factory.setValidating(false);
+		factory.setNamespaceAware(true);
+		factory.setIgnoringComments(false);
+		factory.setIgnoringElementContentWhitespace(false);
+		factory.setExpandEntityReferences(false);
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document doc = builder.parse(url);
+		//System.out.println(doc.getDocumentURI());
+		NodeList n = doc.getElementsByTagName("entry");
+		org.w3c.dom.Element e = doc.createElement("entry");
+		System.out.println(n.getLength());
+		
+		//System.out.println(n.item(1).getChildNodes().item(1).getTextContent());
+//		IOSReview one = new IOSReview(n.item(1));
+//		System.out.println(one.getDate());
+//		System.out.println(one.getTitle());
+//		System.out.println(one.getReview());
+//		System.out.println(one.getRating());
+		
+		//for loop & add all to iosreview list starting at index 1 (1st "entry" node is random web stuff
+		for(int i = 1; i < n.getLength(); i++) {
+			toReturn.add(new IOSReview(n.item(i)));
+		}
+		
+		return toReturn;
+	}
+	
+	
+	public static void createiOStxt(ArrayList<IOSReview> list) {
+		IOSReview current;
+		String curLine;
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(
+					"orig_reviews.txt"));
+			for (int i = 0; i < list.size(); i++) {
+				current = list.get(i);
+				curLine = current.getDate() + "\t" + current.getTitle() + "\t"
+						+ current.getReview() + "\t" + current.getRating();
+				out.write(curLine);
+				out.newLine();
+				System.out.println(curLine);
+				
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 
 	/**
 	 * auxiliary function takes string url and returns the HTMLDocument
