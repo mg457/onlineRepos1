@@ -21,6 +21,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /*
  *sample code from site using Jsoup library:
@@ -360,12 +361,14 @@ public class ReviewScraper {
 		factory.setExpandEntityReferences(false);
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		Document doc = builder.parse(url);
+	
 		//System.out.println(doc.getDocumentURI());
 		NodeList n = doc.getElementsByTagName("entry");
 		org.w3c.dom.Element e = doc.createElement("entry");
 		System.out.println(n.getLength());
 		
-		//System.out.println(n.item(1).getChildNodes().item(1).getTextContent());
+		//System.out.println("15 " +n.item(1).getChildNodes().item(15).getTextContent());
+		
 //		IOSReview one = new IOSReview(n.item(1));
 //		System.out.println(one.getDate());
 //		System.out.println(one.getTitle());
@@ -377,23 +380,37 @@ public class ReviewScraper {
 			toReturn.add(new IOSReview(n.item(i)));
 		}
 		
+		//System.out.println(toReturn.size());
 		return toReturn;
 	}
 	
+	public static ArrayList<IOSReview> scrapeios2(String url)  {
+		ArrayList<IOSReview> toReturn = new ArrayList<IOSReview>();
+		kit = new HTMLEditorKit();
+		html = getUrl(url, kit);
+		Element review1 = html.getElement("content").getElement(0).getElement(1);
+		//System.out.println(html.getElement("content").getElement(0).getElementCount());
+		
+		return toReturn;
 	
+	}
+		
 	public static void createiOStxt(ArrayList<IOSReview> list) {
 		IOSReview current;
 		String curLine;
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(
-					"orig_reviews.txt"));
+					"P:\\DPI_Mobile Product\\new_iOSreviews.txt"));
+			//out.write("Date\tTitle\tReview\tVersion\tStars\tCategory\tStatus\n");
 			for (int i = 0; i < list.size(); i++) {
 				current = list.get(i);
 				curLine = current.getDate() + "\t" + current.getTitle() + "\t"
-						+ current.getReview() + "\t" + current.getRating();
+						+ current.getReview() + "\t" + current.getVersion() + "\t" + current.getRating();
+				/*curLine =  current.getDate() + ";;" + current.getTitle() + ";;"
+						+ current.getReview() + ";;" + current.getRating();*/
 				out.write(curLine);
 				out.newLine();
-				System.out.println(curLine);
+				//System.out.println(curLine);
 				
 			}
 			out.close();
