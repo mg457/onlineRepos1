@@ -47,8 +47,16 @@ public class ReviewScraperTest2 {
 			fail("exception");
 		}
 		
-		assert(returned.size() == 51);
+		assert(returned.size() == 50);
+		rs.createiOStxt(returned);
 
+	}
+	
+	@Test
+	public void testios2() {
+		ArrayList<IOSReview> returned = new ArrayList<IOSReview>();
+		String xml = "https://itunes.apple.com/rss/customerreviews/id=635150066/xml";
+		rs.scrapeios2(xml);
 	}
 
 	/*@Test
