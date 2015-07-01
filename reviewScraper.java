@@ -395,23 +395,28 @@ public class ReviewScraper {
 	
 	}
 		
-	public static void createiOStxt(ArrayList<IOSReview> list) {
+    public static void createiOStxt(ArrayList<IOSReview> list, String date) {
 		IOSReview current;
 		String curLine;
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(
 					"P:\\DPI_Mobile Product\\new_iOSreviews.txt"));
-			//out.write("Date\tTitle\tReview\tVersion\tStars\tCategory\tStatus\n");
+			// out.write("Date\tTitle\tReview\tVersion\tStars\tCategory\tStatus\n");
 			for (int i = 0; i < list.size(); i++) {
 				current = list.get(i);
-				curLine = current.getDate() + "\t" + current.getTitle() + "\t"
-						+ current.getReview() + "\t" + current.getVersion() + "\t" + current.getRating();
-				/*curLine =  current.getDate() + ";;" + current.getTitle() + ";;"
-						+ current.getReview() + ";;" + current.getRating();*/
-				out.write(curLine);
-				out.newLine();
-				//System.out.println(curLine);
-				
+				curLine = current.getDate() + "\t" + current.getTitle()
+						+ "\t" + current.getReview() + "\t"
+						+ current.getVersion() + "\t" + current.getRating();
+				if (current.getDate().equals(date)) {
+					
+					/*
+					 * curLine = current.getDate() + ";;" + current.getTitle() +
+					 * ";;" + current.getReview() + ";;" + current.getRating();
+					 */
+					out.write(curLine);
+					out.newLine();
+					// System.out.println(curLine);
+				}
 			}
 			out.close();
 		} catch (IOException e) {
