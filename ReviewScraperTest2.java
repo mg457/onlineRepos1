@@ -11,6 +11,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.junit.*;
 import org.xml.sax.SAXException;
 
+import java.util.*;
+
 public class ReviewScraperTest2 {
 
 	ReviewScraper rs;
@@ -25,11 +27,15 @@ public class ReviewScraperTest2 {
 	}
 
 	@Test
-	public void testScrapeGooglePlay2() {
+	public void testScraping() {
+		ArrayList<IOSReview> returned = new ArrayList<IOSReview>();
+		
 		String url = "https://play.google.com/store/apps/details?id=com.hilton.android.hhonors&hl=en";
+		String xml = "https://itunes.apple.com/rss/customerreviews/id=635150066/xml";
 		String urltest = "https://www.google.com";
 		try {
-			rs.scrapeGooglePlay2(urltest);
+			//rs.scrapeGooglePlay2(urltest);
+			returned = rs.scrapeios(xml);
 		} catch (IOException a) {
 			fail("exception");
 			System.out.println(a.toString());
@@ -40,15 +46,17 @@ public class ReviewScraperTest2 {
 			System.out.println(c.toString());
 			fail("exception");
 		}
+		
+		assert(returned.size() == 51);
 
 	}
 
-	@Test
+	/*@Test
 	public void testGetUrl() {
 		// fail("Not yet implemented");
 		html = rs.getUrl("https://play.google.com/store/apps/details?id=com.hilton.android.hhonors&hl=en",
 				kit);
 		
-	}
+	}*/
 
 }
