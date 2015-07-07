@@ -1,19 +1,8 @@
 package reviewScraper.java;
 
-import java.net.*;
-//import java.util.Enumeration;
 import java.io.*;
+import java.net.*;
 
-import javax.swing.text.AttributeSet;
-import javax.swing.event.DocumentEvent;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.html.*;
-//import javax.swing.text.AttributeSet;
-import javax.swing.text.Element;
-import javax.swing.event.DocumentEvent;
-//import javax.xml.parsers.DocumentBuilder;
-//import javax.xml.parsers.DocumentBuilderFactory;
-//import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.*;
 
 import org.w3c.dom.*;
@@ -21,336 +10,19 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
-/*
- *sample code from site using Jsoup library:
- *	https://www.packtpub.com/books/content/
- * 	creating-sample-web-scraper
- *"scrapes" first paragraph of web page
- *originally intended for wikipedia page--
- *	may need extra extraction code to reach
- *	individual reviews & titles
- */
+import org.json.simple.*;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+
 public class ReviewScraper {
 
-	private static HTMLDocument html;
-	private static HTMLEditorKit kit;
-	
-	
-	private ArrayList<IOSReview> ios;
-
-	public ReviewScraper() {
-	} // constructor for junit testing
-
-	public static void main(String[] args) {
-		// scrapeHiltonGarden();
-		// scrapeiTunes();
-		//scrapeGooglePlay();
-		
-		//https://itunes.apple.com/rss/customerreviews/id=635150066/xml
-
+	public ReviewScraper() { // constructor for junit testing
 	}
 
-	/**
-	 * scrapes the Hilton Garden Inn Dallas's website for random text within
-	 * bullet points
-	 */
-	public static void scrapeHiltonGarden() {
-		kit = new HTMLEditorKit();
-		html = getUrl("http://hiltongardeninn3.hilton.com/en/hotels/texas/"
-				+ "hilton-garden-inn-dallas-market-center-DALMAGI/index.html",
-				kit);
-		// System.out.println(html.replaceAll("\\s", ""));
-		// System.out.println(kit.getContentType());
-
-		// leaf(single bullet in desired list with text)
-		Element leaf;
-
-		// parent of leaf; contains entire bulleted list
-		/*
-		 * Element leafParent = html.getElement("ls-gen11-ls-area-body")
-		 * .getElement(0).getElement(1).getElement(1).getElement(0)
-		 * .getElement(0);
-		 */// not used
-
-		// parent node who holds the bullets
-		Element grandNode = html.getElement("ls-gen11-ls-area-body")
-				.getElement(0).getElement(1).getElement(1);
-
-		int children = grandNode.getElementCount();
-		System.out.println("children: " + children); // number of bullet points
-		// loop through all bullet points(leaf elements) contained in grandNode,
-		// make them into ParagraphView objects, find their starting and ending
-		// positions in the main HTMLDocument, and isolate those sections into
-		// Strings & print them
-		for (int i = 0; i < children; i++) {
-			leaf = html.getElement("ls-gen11-ls-area-body").getElement(0)
-					.getElement(1).getElement(1).getElement(i).getElement(0)
-					.getElement(0);
-			ParagraphView paraView = new ParagraphView(leaf);
-
-			// to get the element's position within the document
-			int start = paraView.getStartOffset();
-			int end = paraView.getEndOffset();
-			int length = end - start;
-
-			try {
-				String target = html.getText(start, length);
-				System.out.println(target);
-			} catch (BadLocationException e) {
-				System.out.println("bad location exception thrown");
-			}
-		}
-
-		// Document doc = Jsoup.parse(html); // PATT
-		// String contentText =
-		// doc.select("#mw-content-text > p").first().text(); // PATT
-		// #content-body(id) ; .ng-binding > p (class)
-		// System.out.println(contentText); //PATT
-	}
-
-	/**
-	 * scrapes the app reviews that are featured on the PUBLIC iTunes page for
-	 * the HHonors app
-	 */
-	public static void scrapeiTunes() {
-		kit = new HTMLEditorKit();
-		html = getUrl(
-				"https://itunes.apple.com/us/app/hilton-hhonors/id635150066?mt=8",
-				kit); // works for https url...
-
-		// leaf(single bullet in desired list with text)
-		Element leaf;
-
-		// Element review =
-		// html.getElement("content").getElement(0).getElement(4).getElement(1);
-		Element reviewParent = html.getElement("content").getElement(0)
-				.getElement(1).getElement(4);
-
-		int children = reviewParent.getElementCount() - 1;
-		System.out.println("children: " + children); // number of bullet points
-		// loop through all bullet points(leaf elements) contained in grandNode,
-		// make them into ParagraphView objects, find their starting and ending
-		// positions in the main HTMLDocument, and isolate those sections into
-		// Strings & print them
-		for (int i = 1; i < children + 1; i++) { // +1 because review nodes have
-													// same parent as
-													// "Customer Reviews" header
-													// node
-			leaf = html.getElement("content").getElement(0).getElement(1)
-					.getElement(4).getElement(i);
-
-			ParagraphView paraView = new ParagraphView(leaf);
-
-			// to get the element's position within the document
-			int start = paraView.getStartOffset();
-			int end = paraView.getEndOffset();
-			int length = end - start;
-
-			try {
-				String target = html.getText(start, length);
-				System.out.println(target);
-			} catch (BadLocationException e) {
-				System.out.println("bad location exception thrown");
-			}
-		}
-	}
-
-	public static void scrapeGooglePlay() {
-		kit = new HTMLEditorKit();
-		html = getUrl(
-				"https://play.google.com/store/apps/details?id=com.hilton.android.hhonors&hl=en",
-				kit); // works for https url...
-
-		// Element leaf;
-		// Element intermediate = html.getElement("body-content").getElement(0)
-		// .getElement(0).getElement(0);
-		// Element parent = intermediate.getElement(1).getElement(1)
-		// .getElement(0).getElement(0).getElement(1).getElement(0)
-		// .getElement(0).getElement(1);
-		// Element helpfulness = parent.getElement(2);
-		// Element newest = parent.getElement(0);
-		// Element display = intermediate.getElement(1).getElement(1)
-		// .getElement(0).getElement(0).getElement(1).getElement(0)
-		// .getElement(0).getElement(0).getElement(0);
-		// Element dropdown = intermediate.getElement(1).getElement(1)
-		// .getElement(0).getElement(0).getElement(1).getElement(0);
-		// //.getElement(0);
-		// // System.out.print(makeString(display));
-		// System.out.print("1: " + makeString(display));
-		// try {
-		// //html.setInnerHTML(dropdown,
-		// "<div class=\"dropdown-menu-container review-filter id-review-sort-filter open\">");
-		//
-		// html.setInnerHTML(newest,
-		// "<div class=\"dropdown-child selected\" data-dropdown-value=\"0\">Newest</div>");
-		// html.setInnerHTML(helpfulness,
-		// "<div class=\"dropdown-child\" data-dropdown-value=\"2\">Helpfulness</div>");
-		// html.setInnerHTML(display,
-		// "<span class=\"displayed-child\">Newest</span>");
-		// } catch (BadLocationException | IOException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		// System.out.print("2: " + makeString(display));
-		// // System.out.print(makeString(display));
-
-		// Element expandPagesContainer = html.getElement("body-content")
-		// .getElement(0).getElement(0).getElement(0).getElement(1)
-		// .getElement(1).getElement(0).getElement(1).getElement(0).getElement(0);
-
-		// Element previewReviews =
-		// html.getElement("body-content").getElement(0)
-		// .getElement(0).getElement(0).getElement(1).getElement(1)
-		// .getElement(0).getElement(1).getElement(0).getElement(0);
-
-		// System.out.println(attributes(previewReviews, "1"));
-
-		Element one = html.getElement("body-content");
-		// System.out.println(attributes(one, "1"));
-
-		Element two = one.getElement(0); // class="outer-container"
-		// System.out.println(attributes(two, "2"));
-
-		Element three = two.getElement(0);// class="inner-container"
-		// System.out.println(attributes(three, "3"));
-
-		Element four = three.getElement(0);
-		// System.out.println(attributes(four, "4")); //class="main-content"
-
-		Element five = four.getElement(1);
-		// System.out.println(attributes(five, "5"));
-		// //class="details-wrapper apps"
-
-		Element six = five.getElement(1);
-		// System.out.println(attributes(six, "6"));
-		// //class="details-section reviews"
-
-		Element seven = six.getElement(0);
-		// System.out.println("(details-section contents): \n" +
-		// attributes(seven, "7")); //class="details-section contents"
-
-		Element eight = seven.getElement(1);
-		// System.out.println(attributes(eight, "8"));
-		// //class="details-section-body expandable"
-
-		Element nine = eight.getElement(0); // this seems to be expandable
-											// reviews
-		// System.out.println(attributes(nine, "9")); //no attributes
-
-		Element ten = nine.getElement(0);
-		// System.out.println(attributes(ten, "10"));
-		// //class="expand-pages-container"
-		// System.out.println(makeString(ten));
-
-		Element eleven;
-		for (int i = 0; i < ten.getElementCount(); i++) {
-			eleven = ten.getElement(i); // class="expand-pages-container"
-			// System.out.println(attributes(eleven, "11"));
-			// System.out.println(makeString(eleven));
-		}
-
-		Element ten2 = eight.getElement(1);
-		System.out.println("children of element:  " + ten2.getElementCount()
-				+ "\n");
-		Element eleven2;
-		for (int i = 0; i < ten2.getElementCount(); i++) {
-			eleven2 = ten2.getElement(i); // class="expand-pages-container"
-			// if(makeString(eleven2).contains("June 8, 2015")){
-			// System.out.println(attributes(eleven, "11"));
-			// System.out.println(makeString(eleven2));
-			// System.out.println("eleven2: " +
-			// eleven2.getElement(0).getElementCount());
-			try {
-				Element authorDate = eleven2.getElement(0).getElement(1)
-						.getElement(0).getElement(0);
-				String header = makeString(authorDate);
-				// System.out.println(header);
-
-				String date = "June 29, 2015";
-				if (header.contains(date)) { // specify date (will need to
-												// separate review body node to
-												// make
-												// sure doesn't contain
-												// feedback)
-					// System.out.println("review: \n" + makeString(eleven2));
-					Element review = eleven2.getElement(0).getElement(2);
-					System.out.println(header + "\n" + makeString(review));
-					// System.out.println(header); //when "Newest" isn't
-					// selected, doesn't find all from most recent date
-				}
-			} catch (NullPointerException e) {
-				// skip to next review
-			}
-		}
-		//
-		// try {
-		// Element featuredReview1 = previewReviews.getElement(1)
-		// .getElement(0);
-		// // Element author = featuredReview1.getElement(1).getElement(0)
-		// // .getElement(0);
-		// // System.out.println("author: " + makeString(author));
-		// System.out.println(attributes(featuredReview1, "2"));
-		//
-		// } catch (NullPointerException e) {
-		// e.printStackTrace();
-		// // Element singleReviewRating =
-		// }
-
-	}
-
-	public static void scrapeGooglePlay2(String url) throws IOException,
-			ParserConfigurationException, SAXException {
-		// String url =
-		// "https://play.google.com/store/apps/details?id=com.hilton.android.hhonors&hl=en";
-		// kit = new HTMLEditorKit();
-		// html = getUrl(url, kit);
-		// http://www.rgagnon.com/javadetails/java-0530.html
-
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-		// added 6/30
-		factory.setValidating(false);
-		factory.setNamespaceAware(true);
-		factory.setIgnoringComments(false);
-		factory.setIgnoringElementContentWhitespace(false);
-		factory.setExpandEntityReferences(false);
-		DocumentBuilder builder = factory.newDocumentBuilder();
-		//Document doc = builder.parse(new InputSource(new StringReader(url))); // with
-																				// this,
-																				// gets
-																				// different
-																				// SAXParseException
-																				// "content is not allowed in prolog"
-		URL urlObj = null;
-		try {
-			urlObj = new URL(url);
-		} catch (MalformedURLException e) {
-			System.out.println("The url was malformed!");
-		}
-		Document doc = null;
-		
-		try {
-			//doc.putProperty("IgnoreCharsetDirective", Boolean.TRUE);
-			InputStream is = urlObj.openConnection().getInputStream();
-			doc = builder.parse(is);
-			
-		} catch (IOException e) {
-			System.out.println("There was an error connecting to the URL");}
-		
-
-		// Document doc = builder.parse(url); //SAXParseException
-											// "The markup in the document preceding the root element must be well-formed."
-		DOMImplementation impl = builder.getDOMImplementation();
-		//System.out.println(doc.getDocumentURI());
-		
-		
-
-	}
-	
-	public static ArrayList<IOSReview> scrapeios(String url) throws IOException,
-	ParserConfigurationException, SAXException {
+	public static ArrayList<IOSReview> scrapeios(String url)
+			throws IOException, ParserConfigurationException, SAXException {
 		ArrayList<IOSReview> toReturn = new ArrayList<IOSReview>();
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		// added 6/30
@@ -361,54 +33,171 @@ public class ReviewScraper {
 		factory.setExpandEntityReferences(false);
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		Document doc = builder.parse(url);
-	
-		//System.out.println(doc.getDocumentURI());
+
+		// System.out.println(doc.getDocumentURI());
 		NodeList n = doc.getElementsByTagName("entry");
-		org.w3c.dom.Element e = doc.createElement("entry");
-		System.out.println(n.getLength());
-		
-		//System.out.println("15 " +n.item(1).getChildNodes().item(15).getTextContent());
-		
-//		IOSReview one = new IOSReview(n.item(1));
-//		System.out.println(one.getDate());
-//		System.out.println(one.getTitle());
-//		System.out.println(one.getReview());
-//		System.out.println(one.getRating());
-		
-		//for loop & add all to iosreview list starting at index 1 (1st "entry" node is random web stuff
-		for(int i = 1; i < n.getLength(); i++) {
+
+		if (n.getLength() > 0) {
+			System.out.println("connected");
+		} else {
+			System.out.println("connection didn't work");
+		}
+
+		// System.out.println("15 "
+		// +n.item(1).getChildNodes().item(15).getTextContent());
+
+		// IOSReview one = new IOSReview(n.item(1));
+		// System.out.println(one.getDate());
+		// System.out.println(one.getTitle());
+		// System.out.println(one.getReview());
+		// System.out.println(one.getRating());
+
+		// for loop & add all to iosreview list starting at index 1 (1st "entry"
+		// node is random web stuff
+		for (int i = 1; i < n.getLength(); i++) {
 			toReturn.add(new IOSReview(n.item(i)));
 		}
+
+		// System.out.println(toReturn.size());
+		return toReturn;
+	}
+
+	public static ArrayList<AppFiguresReview> appFiguresReviews(String docPath)
+			throws SAXException, IOException, ParserConfigurationException {
+		ArrayList<AppFiguresReview> toReturn = new ArrayList<AppFiguresReview>();
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setValidating(false);
+		factory.setNamespaceAware(true);
+		factory.setIgnoringComments(false);
+		factory.setIgnoringElementContentWhitespace(false);
+		factory.setExpandEntityReferences(false);
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		//InputSource is = new InputSource(docPath);
+		File file = new File(docPath);
+		FileReader fr = new FileReader(file);
+		JSONParser parser = new JSONParser();
 		
-		//System.out.println(toReturn.size());
+		
+		try {
+			Object obj = parser.parse(fr);
+			//JSONArray array = (JSONArray) obj;
+			JSONObject jsobj = (JSONObject) obj;
+		//	System.out.println(jsobj.toJSONString(jsobj));
+			JSONArray reviewList = (JSONArray) jsobj.get("reviews");
+//			JSONObject first = (JSONObject) reviewList.get(0);
+//			AppFiguresReview rev = new AppFiguresReview(first);
+			//System.out.println(rev.getDate());
+			
+			for (int i = 0; i < reviewList.size(); i++) {
+				toReturn.add(new AppFiguresReview((JSONObject)reviewList.get(i)));
+			}
+			
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		//Document doc = builder.parse(file);
+//		NodeList n = doc.getElementsByTagName("li");
+//		if (n.getLength() > 0) {
+//			System.out.println("connected. length: " + n.getLength());
+//		} else {
+//			System.out.println("connection didn't work");
+//		}
+
+		
+
 		return toReturn;
 	}
 	
-	public static ArrayList<IOSReview> scrapeios2(String url)  {
-		ArrayList<IOSReview> toReturn = new ArrayList<IOSReview>();
-		kit = new HTMLEditorKit();
-		html = getUrl(url, kit);
-		Element review1 = html.getElement("content").getElement(0).getElement(1);
-		//System.out.println(html.getElement("content").getElement(0).getElementCount());
-		
-		return toReturn;
-	
+	public static void createAppFigurestxt(ArrayList<AppFiguresReview> list,
+			String date) {
+		AppFiguresReview current;
+		String curLine;
+		try {
+			BufferedWriter out = new BufferedWriter(
+					new FileWriter(
+							//"C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_appfigures_reviews.txt"));
+							"P:\\DPI_Mobile Product\\new_android_reviews.txt"));
+			for (int i = 0; i < list.size(); i++) {
+				current = list.get(i);
+				curLine = current.getDate() + "," + current.getTitle() + ",\""
+						+ current.getReview() + "\"," + current.getVersion()
+						+ "," + current.getDevice() + "," + current.getRating();
+				
+				if (current.getDate().equals(date) /*&& current.getType().equals(type)*/) {
+					out.write(curLine);
+					out.newLine();
+					//System.out.println(curLine);
+				}
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
+	
+	public static void countReviews(ArrayList<AppFiguresReview> list,
+			int date) throws SAXException, IOException, ParserConfigurationException {
+		AppFiguresReview current;
+		String curLine;
+		int pos = 0;
+		int neg = 0;
+		int neutral = 0;
+		int total = 0;
+		//ArrayList<AppFiguresReview> list;
 		
-    public static void createiOStxt(ArrayList<IOSReview> list, String date) {
+		
+			
+			for (int i = 0; i < list.size(); i++) {
+				current = list.get(i);
+//				curLine = current.getDate() + "," + current.getTitle() + ",\""
+//						+ current.getReview() + "\"," + current.getVersion()
+//						+ "," + current.getDevice() + "," + current.getRating();
+//				
+				if (current.getDate().charAt(1)==date) /*&& current.getType().equals(type)*/ {
+					if(current.getRating().equals("5.00") || current.getRating().equals("4.00")) {
+						pos++;
+						System.out.println(pos);
+					}
+					else if(current.getRating().equals("3.00") ) 
+						neutral++;
+					else if(current.getRating().equals("2.00") || current.getRating().equals("1.00")) {
+						neg++;
+					}
+					total++;
+				}
+			}
+			
+			
+			
+		
+		System.out.println("Positive: " + pos + "\nNegative: " + neg + "\nNeutral: " + neutral + "\nTotal: " + total);
+
+	}
+
+	public static void createiOStxt(ArrayList<IOSReview> list, String date) {
 		IOSReview current;
 		String curLine;
 		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(
-					"P:\\DPI_Mobile Product\\new_iOSreviews.txt"));
+			BufferedWriter out = new BufferedWriter(
+					new FileWriter(
+					 "P:\\DPI_Mobile Product\\new_iOSreviews.txt"));
+						//	"C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_iOSreviews.txt"));
 			// out.write("Date\tTitle\tReview\tVersion\tStars\tCategory\tStatus\n");
 			for (int i = 0; i < list.size(); i++) {
 				current = list.get(i);
-				curLine = current.getDate() + "\t" + current.getTitle()
-						+ "\t" + current.getReview() + "\t"
-						+ current.getVersion() + "\t" + current.getRating();
+				// curLine = current.getDate() + "\t" + current.getTitle() +
+				// "\t"
+				// + current.getReview() + "\t" + current.getVersion()
+				// + "\t" + current.getRating();
+				curLine = current.getDate() + "," + current.getTitle() + ",\""
+						+ current.getReview() + "\"," + current.getVersion()
+						+ "," + current.getRating();
 				if (current.getDate().equals(date)) {
-					
+
 					/*
 					 * curLine = current.getDate() + ";;" + current.getTitle() +
 					 * ";;" + current.getReview() + ";;" + current.getRating();
@@ -422,98 +211,6 @@ public class ReviewScraper {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-
-	/**
-	 * auxiliary function takes string url and returns the HTMLDocument
-	 * associated with the web page that the url represents
-	 * 
-	 * @param url
-	 *            -url of web page we want to connect to
-	 * @param kit
-	 *            -HTMLEditorKit object constructed in methods calling this
-	 *            method; purpose for inclusion is createDefaultDocument method
-	 *            to obtain HTML in HTMLDocument format
-	 * @return HTML of desired web page in HTMLDocument object format
-	 */
-	public static HTMLDocument getUrl(String url, HTMLEditorKit kit) {
-		URL urlObj = null;
-		try {
-			urlObj = new URL(url);
-		} catch (MalformedURLException e) {
-			System.out.println("The url was malformed!");
-		}
-		/*
-		 * URLConnection urlCon = null; BufferedReader in = null; String
-		 * outputText = ""; try { urlCon = urlObj.openConnection(); in = new
-		 * BufferedReader(new InputStreamReader( urlCon.getInputStream()));
-		 * String line = ""; while ((line = in.readLine()) != null) { outputText
-		 * += line + "\n"; } in.close(); } catch (IOException e) {
-		 * System.out.println("There was an error connecting to the URL");
-		 * return ""; } return outputText;
-		 */
-
-		HTMLDocument doc = (HTMLDocument) kit.createDefaultDocument();
-
-		try {
-			doc.putProperty("IgnoreCharsetDirective", Boolean.TRUE);
-			Reader HTMLReader = new InputStreamReader(urlObj.openConnection()
-					.getInputStream());
-			kit.read(HTMLReader, doc, 0);
-		} catch (IOException e) {
-			System.out.println("There was an error connecting to the URL");
-		} catch (BadLocationException e) {
-			System.out.println("bad location in document");
-		}
-		return doc;
-	}
-
-	/**
-	 * function solely for purpose of testing/finding html element
-	 * 
-	 * @param e
-	 *            -element whose attributes are being printed
-	 * @param x
-	 *            -identifier to separate calls to this method
-	 * @return String containing all attributes of given element
-	 */
-	private static String attributes(Element e, String x) {
-		String toReturn = "";
-		AttributeSet as = e.getAttributes();
-		for (Enumeration<?> en = as.getAttributeNames(); en.hasMoreElements();) {
-			toReturn += (x + ": " + en.nextElement() + "\n");
-		}
-		toReturn += "element count for " + x + ": " + e.getElementCount()
-				+ "\n";
-		return toReturn;
-	}
-
-	/**
-	 * helper method to convert Element object representing a leaf node into the
-	 * string that it represents
-	 * 
-	 * @param leafNode
-	 *            -Element representing node containing desired text
-	 * @return String representation of desired text within HTMLDocument
-	 */
-	private static String makeString(Element leafNode) {
-		String toReturn = ""; // initialize local variable
-
-		// get the element's position within the document
-		ParagraphView paraView = new ParagraphView(leafNode);
-		int start = paraView.getStartOffset();
-		int end = paraView.getEndOffset();
-		int length = end - start;
-
-		// create string
-		try {
-			toReturn = html.getText(start, length);
-		} catch (BadLocationException e) {
-			System.out.println("bad location exception thrown");
-		}
-
-		return toReturn;
 	}
 
 }
