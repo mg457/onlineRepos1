@@ -108,13 +108,13 @@ public class ReviewScraper {
 	}
 
 	public static void createAppFigurestxt(ArrayList<AppFiguresReview> list,
-			String date) {
+			String date, int instance) {
 		AppFiguresReview current;
 		String curLine;
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(
-			// "C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_appfigures_reviews.txt"));
-					"P:\\DPI_Mobile Product\\new_android_reviews.txt"));
+			 //"C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_android_reviews" + instance + ".txt"));
+					"P:\\DPI_Mobile Product\\new_android_reviews" + date + ".txt"));
 			for (int i = 0; i < list.size(); i++) {
 				current = list.get(i);
 				curLine = current.getDate() + "," + current.getTitle() + ",\""
@@ -178,14 +178,14 @@ public class ReviewScraper {
 
 	}
 
-	public static void createiOStxt(ArrayList<IOSReview> list, String date) {
+	public static void createiOStxt(ArrayList<IOSReview> list, String date, int instance) {
 		IOSReview current;
 		String curLine;
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(
-					"P:\\DPI_Mobile Product\\new_iOSreviews" + date + ".txt"));
-			// "C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_iOSreviews.txt"));
+					"P:\\DPI_Mobile Product\\new_iOSreviews" + instance + ".txt"));
+			// "C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_iOSreviews" + instance + ".txt"));
 			// out.write("Date\tTitle\tReview\tVersion\tStars\tCategory\tStatus\n");
 			for (int i = 0; i < list.size(); i++) {
 				current = list.get(i);
