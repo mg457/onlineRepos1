@@ -26,12 +26,13 @@ public class RunScrape {
 
 		if (decision == 1) {
 
-			Scanner scanner3 = new Scanner(System.in);
+			
 			ArrayList<IOSReview> returned = new ArrayList<IOSReview>();
 
 			String xml = "https://itunes.apple.com/rss/customerreviews/id=635150066/xml";
 
 			for (int days = 0; days < numDays; days++) {
+				Scanner scanner3 = new Scanner(System.in);
 				System.out.println("Enter desired date's month: ");
 				String month = scanner3.nextLine();
 				if (month.length() == 1) {
@@ -57,7 +58,7 @@ public class RunScrape {
 				}
 			}
 			for (int x = 0; x < dates.size(); x++) {
-				rs.createiOStxt(returned, dates.get(x));
+				rs.createiOStxt(returned, dates.get(x), x);
 				System.out.println("retrieving reviews from " + dates.get(x));
 			}
 			System.out.println("done");
@@ -100,7 +101,7 @@ public class RunScrape {
 				// rs.countReviews(returned, 7);
 				for (int x = 0; x < dates.size(); x++) {
 					System.out.println("retrieving reviews from " + dates.get(x));
-					rs.createAppFigurestxt(returned, dates.get(x));
+					rs.createAppFigurestxt(returned, dates.get(x), x);
 
 				}
 				// }
