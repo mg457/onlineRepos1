@@ -15,7 +15,6 @@ import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-
 public class ReviewScraper {
 
 	public ReviewScraper() { // constructor for junit testing
@@ -72,64 +71,64 @@ public class ReviewScraper {
 		factory.setIgnoringElementContentWhitespace(false);
 		factory.setExpandEntityReferences(false);
 		DocumentBuilder builder = factory.newDocumentBuilder();
-		//InputSource is = new InputSource(docPath);
+		// InputSource is = new InputSource(docPath);
 		File file = new File(docPath);
 		FileReader fr = new FileReader(file);
 		JSONParser parser = new JSONParser();
-		
-		
+
 		try {
 			Object obj = parser.parse(fr);
-			//JSONArray array = (JSONArray) obj;
+			// JSONArray array = (JSONArray) obj;
 			JSONObject jsobj = (JSONObject) obj;
-		//	System.out.println(jsobj.toJSONString(jsobj));
+			// System.out.println(jsobj.toJSONString(jsobj));
 			JSONArray reviewList = (JSONArray) jsobj.get("reviews");
-//			JSONObject first = (JSONObject) reviewList.get(0);
-//			AppFiguresReview rev = new AppFiguresReview(first);
-			//System.out.println(rev.getDate());
-			
+			// JSONObject first = (JSONObject) reviewList.get(0);
+			// AppFiguresReview rev = new AppFiguresReview(first);
+			// System.out.println(rev.getDate());
+
 			for (int i = 0; i < reviewList.size(); i++) {
-				toReturn.add(new AppFiguresReview((JSONObject)reviewList.get(i)));
+				toReturn.add(new AppFiguresReview((JSONObject) reviewList
+						.get(i)));
 			}
-			
+
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		//Document doc = builder.parse(file);
-//		NodeList n = doc.getElementsByTagName("li");
-//		if (n.getLength() > 0) {
-//			System.out.println("connected. length: " + n.getLength());
-//		} else {
-//			System.out.println("connection didn't work");
-//		}
 
-		
+		// Document doc = builder.parse(file);
+		// NodeList n = doc.getElementsByTagName("li");
+		// if (n.getLength() > 0) {
+		// System.out.println("connected. length: " + n.getLength());
+		// } else {
+		// System.out.println("connection didn't work");
+		// }
 
 		return toReturn;
 	}
-	
+
 	public static void createAppFigurestxt(ArrayList<AppFiguresReview> list,
 			String date) {
 		AppFiguresReview current;
 		String curLine;
 		try {
-			BufferedWriter out = new BufferedWriter(
-					new FileWriter(
-							//"C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_appfigures_reviews.txt"));
-							"P:\\DPI_Mobile Product\\new_android_reviews.txt"));
+			BufferedWriter out = new BufferedWriter(new FileWriter(
+			// "C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_appfigures_reviews.txt"));
+					"P:\\DPI_Mobile Product\\new_android_reviews.txt"));
 			for (int i = 0; i < list.size(); i++) {
 				current = list.get(i);
 				curLine = current.getDate() + "," + current.getTitle() + ",\""
 						+ current.getReview() + "\"," + current.getVersion()
 						+ "," + current.getDevice() + "," + current.getRating();
-				
-				if (current.getDate().equals(date) /*&& current.getType().equals(type)*/) {
+
+				if (current.getDate().equals(date) /*
+													 * &&
+													 * current.getType().equals
+													 * (type)
+													 */) {
 					out.write(curLine);
 					out.newLine();
-					//System.out.println(curLine);
+					// System.out.println(curLine);
 				}
 			}
 			out.close();
@@ -138,54 +137,55 @@ public class ReviewScraper {
 		}
 
 	}
-	
-	public static void countReviews(ArrayList<AppFiguresReview> list,
-			int date) throws SAXException, IOException, ParserConfigurationException {
+
+	public static void countReviews(ArrayList<AppFiguresReview> list, int date)
+			throws SAXException, IOException, ParserConfigurationException {
 		AppFiguresReview current;
 		String curLine;
 		int pos = 0;
 		int neg = 0;
 		int neutral = 0;
 		int total = 0;
-		//ArrayList<AppFiguresReview> list;
-		
-		
-			
-			for (int i = 0; i < list.size(); i++) {
-				current = list.get(i);
-//				curLine = current.getDate() + "," + current.getTitle() + ",\""
-//						+ current.getReview() + "\"," + current.getVersion()
-//						+ "," + current.getDevice() + "," + current.getRating();
-//				
-				if (current.getDate().charAt(1)==date) /*&& current.getType().equals(type)*/ {
-					if(current.getRating().equals("5.00") || current.getRating().equals("4.00")) {
-						pos++;
-						System.out.println(pos);
-					}
-					else if(current.getRating().equals("3.00") ) 
-						neutral++;
-					else if(current.getRating().equals("2.00") || current.getRating().equals("1.00")) {
-						neg++;
-					}
-					total++;
+		// ArrayList<AppFiguresReview> list;
+
+		for (int i = 0; i < list.size(); i++) {
+			current = list.get(i);
+			// curLine = current.getDate() + "," + current.getTitle() + ",\""
+			// + current.getReview() + "\"," + current.getVersion()
+			// + "," + current.getDevice() + "," + current.getRating();
+			//
+			if (current.getDate().charAt(1) == date) /*
+													 * &&
+													 * current.getType().equals
+													 * (type)
+													 */{
+				if (current.getRating().equals("5.00")
+						|| current.getRating().equals("4.00")) {
+					pos++;
+					System.out.println(pos);
+				} else if (current.getRating().equals("3.00"))
+					neutral++;
+				else if (current.getRating().equals("2.00")
+						|| current.getRating().equals("1.00")) {
+					neg++;
 				}
+				total++;
 			}
-			
-			
-			
-		
-		System.out.println("Positive: " + pos + "\nNegative: " + neg + "\nNeutral: " + neutral + "\nTotal: " + total);
+		}
+
+		System.out.println("Positive: " + pos + "\nNegative: " + neg
+				+ "\nNeutral: " + neutral + "\nTotal: " + total);
 
 	}
 
 	public static void createiOStxt(ArrayList<IOSReview> list, String date) {
 		IOSReview current;
 		String curLine;
+
 		try {
-			BufferedWriter out = new BufferedWriter(
-					new FileWriter(
-					 "P:\\DPI_Mobile Product\\new_iOSreviews.txt"));
-						//	"C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_iOSreviews.txt"));
+			BufferedWriter out = new BufferedWriter(new FileWriter(
+					"P:\\DPI_Mobile Product\\new_iOSreviews" + date + ".txt"));
+			// "C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_iOSreviews.txt"));
 			// out.write("Date\tTitle\tReview\tVersion\tStars\tCategory\tStatus\n");
 			for (int i = 0; i < list.size(); i++) {
 				current = list.get(i);
@@ -210,6 +210,7 @@ public class ReviewScraper {
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+
 		}
 	}
 
