@@ -17,42 +17,49 @@ public class RunScrape {
 		ReviewScraper rs = new ReviewScraper();
 
 		Scanner scanner = new Scanner(System.in);
+		System.out.println("How many days of reviews would you like?");
+		int numDays = scanner.nextInt();
 		System.out
 				.println("Enter 1 if you would like to scrape iOS reviews, or 2 if you would like to extract AppFigures reviews");
 		int decision = scanner.nextInt();
+		ArrayList<String> dates = new ArrayList<String>();
 
 		if (decision == 1) {
+
 			Scanner scanner3 = new Scanner(System.in);
 			ArrayList<IOSReview> returned = new ArrayList<IOSReview>();
 
 			String xml = "https://itunes.apple.com/rss/customerreviews/id=635150066/xml";
 
-			System.out.println("Enter desired date's month: ");
-			String month = scanner3.nextLine();
-			if (month.length() == 1) {
-				String oldMonth = month;
-				month = "0" + oldMonth;
+			for (int days = 0; days < numDays; days++) {
+				System.out.println("Enter desired date's month: ");
+				String month = scanner3.nextLine();
+				if (month.length() == 1) {
+					String oldMonth = month;
+					month = "0" + oldMonth;
+				}
+				System.out.println("Enter desired day: ");
+				String day = scanner3.nextLine();
+				if (day.length() == 1) {
+					String oldDay = day;
+					day = "0" + oldDay;
+				}
+				String date = month + "/" + day + "/" + "2015";
+				dates.add(date);
+				try {
+					returned = rs.scrapeios(xml);
+				} catch (IOException a) {
+					a.printStackTrace();
+				} catch (ParserConfigurationException b) {
+					b.printStackTrace();
+				} catch (SAXException c) {
+					c.printStackTrace();
+				}
 			}
-			System.out.println("Enter desired day: ");
-			String day = scanner3.nextLine();
-			if (day.length() == 1) {
-				String oldDay = day;
-				day = "0" + oldDay;
+			for (int x = 0; x < dates.size(); x++) {
+				rs.createiOStxt(returned, dates.get(x));
+				System.out.println("retrieving reviews from " + dates.get(x));
 			}
-			String date = month + "/" + day + "/" + "2015";
-			System.out.println("retrieving reviews from " + date);
-
-			try {
-				returned = rs.scrapeios(xml);
-			} catch (IOException a) {
-				a.printStackTrace();
-			} catch (ParserConfigurationException b) {
-				b.printStackTrace();
-			} catch (SAXException c) {
-				c.printStackTrace();
-			}
-
-			rs.createiOStxt(returned, date);
 			System.out.println("done");
 
 		} else if (decision == 2) {
@@ -60,36 +67,43 @@ public class RunScrape {
 
 			String jsonPath = "C:\\Users\\madeline2\\Downloads\\reviews.json";
 			Scanner scanner2 = new Scanner(System.in);
-			System.out.println("Enter desired date's month: ");
-			String month = scanner2.nextLine();
-			if (month.length() == 1) {
-				String oldMonth = month;
-				month = "0" + oldMonth;
+			for (int days = 0; days < numDays; days++) {
+
+				System.out.println("Enter desired date's month: ");
+				String month = scanner2.nextLine();
+				if (month.length() == 1) {
+					String oldMonth = month;
+					month = "0" + oldMonth;
+				}
+				System.out.println("Enter desired day: ");
+				String day = scanner2.nextLine();
+				System.out.println("");
+				if (day.length() == 1) {
+					String oldDay = day;
+					day = "0" + oldDay;
+				}
+				String date = month + "/" + day + "/" + "2015";
+				dates.add(date);
 			}
-			System.out.println("Enter desired day: ");
-			String day = scanner2.nextLine();
-			System.out.println("");
-			if (day.length() == 1) {
-				String oldDay = day;
-				day = "0" + oldDay;
-			}
-			String date = month + "/" + day + "/" + "2015";
-			System.out.println("retrieving reviews from " + date);
 
 			try {
-				// returned = rs.appFiguresReviews(jsonPath);
-				for (int j = 0; j < 8; j++) {
-					String add = "";
-					if (j == 0)
-						add = "";
-					else
-						add = " (" + j + ")";
-					returned = rs
-							.appFiguresReviews("C:\\Users\\madeline2\\Downloads\\reviews"
-									+ add + ".json");
-					rs.countReviews(returned, 7);
-					// rs.createAppFigurestxt(returned, date);
+				returned = rs.appFiguresReviews(jsonPath);
+				// for (int j = 0; j < 8; j++) {
+				// String add = "";
+				// if (j == 0)
+				// add = "";
+				// else
+				// add = " (" + j + ")";
+				// returned = rs
+				// .appFiguresReviews("C:\\Users\\madeline2\\Downloads\\reviews"
+				// + add + ".json");
+				// rs.countReviews(returned, 7);
+				for (int x = 0; x < dates.size(); x++) {
+					System.out.println("retrieving reviews from " + dates.get(x));
+					rs.createAppFigurestxt(returned, dates.get(x));
+
 				}
+				// }
 			} catch (IOException a) {
 				a.printStackTrace();
 			} catch (ParserConfigurationException b) {
@@ -97,13 +111,11 @@ public class RunScrape {
 			} catch (SAXException c) {
 				c.printStackTrace();
 			}
-
 			System.out.println("done");
-
-		} else {
+		}
+		else {
 			System.out.println("Please enter a valid number");
 		}
-
 	}
 
 }
