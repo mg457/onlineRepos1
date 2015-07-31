@@ -1,0 +1,115 @@
+package getReviews;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
+
+/**
+ * This is the main class that actively runs the program and prompts user input
+ * when run. Note - to run: click green play button in bar at top of window
+ * 
+ * @author Maddie Gordon
+ * @version 7/31/15
+ *
+ */
+public class RunScrape {
+
+	public static void main(String[] args) {
+		ReviewScraper rs = new ReviewScraper();
+
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("How many days of reviews would you like?");
+		int numDays = scanner.nextInt();
+
+		ArrayList<String> dates = new ArrayList<String>();
+
+		ArrayList<IOSReview> returnedIOS = new ArrayList<IOSReview>();
+
+		String xml = "https://itunes.apple.com/rss/customerreviews/id=635150066/xml";
+
+		for (int days = 0; days < numDays; days++) {
+			Scanner scanner3 = new Scanner(System.in);
+			System.out.println("Enter desired date's month: ");
+			String month = scanner3.nextLine();
+			if (month.length() == 1) {
+				String oldMonth = month;
+				month = "0" + oldMonth;
+			}
+			System.out.println("Enter desired day: ");
+			String day = scanner3.nextLine();
+			if (day.length() == 1) {
+				String oldDay = day;
+				day = "0" + oldDay;
+			}
+			
+			//***CHANGE DATE HERE IF YEAR IS NO LONGER 2015
+			String date = month + "/" + day + "/" + "2015"; 
+			
+			dates.add(date);
+			try {
+				returnedIOS = rs.scrapeios(xml);
+			} catch (IOException a) {
+				a.printStackTrace();
+			} catch (ParserConfigurationException b) {
+				b.printStackTrace();
+			} catch (SAXException c) {
+				c.printStackTrace();
+			}
+		}
+
+		// ***CHANGE PATH TO DOWNLOADED APPFIGURES JSON FILE HERE
+		String jsonPath = "C:\\Users\\madeline2\\Downloads\\reviews.json";
+
+		Scanner scanner2 = new Scanner(System.in);
+		System.out.println("downloaded json? y or n (lower case)");
+		String json = scanner2.nextLine();
+		if (json.equals("y")) {
+			System.out.println(":)");
+			System.out.println("What is the current version of the iOS app?");
+			String version = scanner2.nextLine();
+			ArrayList<IOSAFReview> returnedAF = new ArrayList<IOSAFReview>();
+			try {
+				returnedAF = rs.IOSAFReviews(jsonPath, version);
+				if (!rs.rssConnection()) {
+					System.out
+							.println("You will need to manually check for Hilton app reviews. Would you like to continue? y or n (lower case)");
+					String decision = scanner2.nextLine();
+					if (decision.equals("y")) {
+						for (int x = 0; x < dates.size(); x++) {
+							System.out.println("retrieving reviews from "
+									+ dates.get(x));
+							rs.createIOSAFtxt(returnedAF, dates.get(x), x);
+						}
+					} else if (decision.equals("n")) {
+						System.out.println("Alright, have a good day! :)");
+						System.exit(0);
+					}
+				} else {
+					System.out
+							.println("What is the current version of the Hilton app?");
+					String hiltonVersion = scanner2.nextLine();
+					ArrayList<IOSAFReview> finalList = rs.compareLists(
+							returnedIOS, returnedAF, hiltonVersion);
+					System.out.println("size after method: " +finalList.size());
+					for (int x = 0; x < dates.size(); x++) {
+						System.out.println("retrieving reviews from "
+								+ dates.get(x));
+						rs.createIOSAFtxt(finalList, dates.get(x), x);
+					}
+				}
+			} catch (IOException a) {
+				a.printStackTrace();
+			} catch (ParserConfigurationException b) {
+				b.printStackTrace();
+			} catch (SAXException c) {
+				c.printStackTrace();
+			}
+			System.out.println("done");
+		} else {
+			System.out.println(":'(");
+		}
+	}
+
+}
