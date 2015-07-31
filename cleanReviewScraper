@@ -1,0 +1,266 @@
+package getReviews;
+
+import java.io.*;
+import javax.xml.parsers.*;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+import java.util.*;
+import org.json.simple.*;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+/**
+ * This class contains the code that actually scrapes the reviews from the RSS
+ * feed, interprets the downloaded AppFigures JSON document, and creates the
+ * text document that is the end product of this entire program.
+ *
+ */
+public class ReviewScraper {
+
+	private static boolean rssConnection = true; // tells whether the RSS
+													// consisting of exclusively
+													// HHonors reviews is
+													// currently being updated
+													// or not. true: no, false:
+													// yes.
+
+	/**
+	 * Empty constructor. Purpose = ability of other classes to access
+	 * ReviewScraper's methods
+	 */
+	public ReviewScraper() {
+	}
+
+	/**
+	 * Connects to iTunes RSS feed for the HHonors app and retrieves reviews,
+	 * which are sometimes present and sometimes not. A message is displayed if
+	 * the RSS feed (which is somewhat unreliable) is currently being updated.
+	 * 
+	 * @param url
+	 *            - the url of the RSS feed
+	 * @return a data structure containing all of the reviews that are in the
+	 *         feed. Note - empty if RSS feed is being updated
+	 * @throws IOException
+	 * @throws ParserConfigurationException
+	 * @throws SAXException
+	 */
+	public static ArrayList<IOSReview> scrapeios(String url)
+			throws IOException, ParserConfigurationException, SAXException {
+		ArrayList<IOSReview> toReturn = new ArrayList<IOSReview>();
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setValidating(false);
+		factory.setNamespaceAware(true);
+		factory.setIgnoringComments(false);
+		factory.setIgnoringElementContentWhitespace(false);
+		factory.setExpandEntityReferences(false);
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document doc = builder.parse(url);
+		NodeList n = doc.getElementsByTagName("entry");
+
+		if (n.getLength() > 0) {
+			System.out.println("connected");
+		} else {
+			System.out
+					.println("connection didn't work\\RSS feed currently being updated");
+			rssConnection = false;
+		}
+		// for loop & add all to iosreview list starting at index 1 (1st "entry"
+		for (int i = 1; i < n.getLength(); i++) {
+			toReturn.add(new IOSReview(n.item(i)));
+		}
+		return toReturn;
+	}
+
+	/**
+	 * This method is meant solely to tell whomever called it whether the RSS
+	 * feed returned useful information or not.
+	 * 
+	 * @return true if method above returned valid information(or if scrapeiOS
+	 *         was never called), false if not
+	 */
+	public static boolean rssConnection() {
+		return rssConnection;
+	}
+	
+	public static ArrayList<String> iosTitles(ArrayList<IOSReview> list) {
+		ArrayList<String> toReturn = new ArrayList<String>();
+		for (int i = 0; i < list.size(); i++) {
+			toReturn.add(list.get(i).getTitle());
+		}
+		return toReturn;
+	}
+
+	/**
+	 * This method interprets the JSON file downloaded from AppFigures
+	 * containing both HHonors and Hilton app reviews, and places the reviews
+	 * into a list data structure.
+	 * 
+	 * @param docPath
+	 *            - location/path of the JSON file downloaded from AppFigures
+	 * @param version
+	 *            - current HHonors app version
+	 * @return - ArrayList containing all reviews in the JSON file
+	 * @throws SAXException
+	 * @throws IOException
+	 * @throws ParserConfigurationException
+	 */
+	public static ArrayList<IOSAFReview> IOSAFReviews(String docPath,
+			String version) throws SAXException, IOException,
+			ParserConfigurationException {
+		ArrayList<IOSAFReview> toReturn = new ArrayList<IOSAFReview>();
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setValidating(false);
+		factory.setNamespaceAware(true);
+		factory.setIgnoringComments(false);
+		factory.setIgnoringElementContentWhitespace(false);
+		factory.setExpandEntityReferences(false);
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		File file = new File(docPath);
+		FileReader fr = new FileReader(file);
+		JSONParser parser = new JSONParser();
+		try {
+			Object obj = parser.parse(fr);
+			JSONObject jsobj = (JSONObject) obj;
+			JSONArray reviewList = (JSONArray) jsobj.get("reviews");
+
+			for (int i = 0; i < reviewList.size(); i++) {
+				toReturn.add(new IOSAFReview((JSONObject) reviewList.get(i),
+						version));
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return toReturn;
+	}
+	
+	public static ArrayList<String> afTitles(ArrayList<IOSAFReview> list) {
+		ArrayList<String> toReturn = new ArrayList<String>();
+		for (int i = 0; i < list.size(); i++) {
+			toReturn.add(list.get(i).getTitle());
+		}
+		return toReturn;
+	}
+
+	/**
+	 * This method's purpose is to double-check and make changes to the reviews
+	 * pulled from AppFigures if they are 1)actually Hilton app reviews, or 2)a
+	 * version other than the latest version of the app
+	 * 
+	 * @param iOSList
+	 *            - list of reviews pulled from RSS feed of ONLY HHonors
+	 *            reviews, containing the correct versions
+	 * @param afList
+	 *            - list of reviews pulled from AppFigures of both types,
+	 *            containing possibly incorrect versions and classifications
+	 * @param hiltonVersion
+	 *            - current version of the Hilton app, according to user input
+	 * @return list of all reviews containing entirely accurate information
+	 */
+	public static ArrayList<IOSAFReview> compareLists(
+			ArrayList<IOSReview> iOSList, ArrayList<IOSAFReview> afList,
+			String hiltonVersion) {
+		ArrayList<IOSAFReview> toReturn = new ArrayList<IOSAFReview>();
+		ArrayList<String> iosTitles = iosTitles(iOSList);
+		ArrayList<String> afTitles = afTitles(afList);
+		int afCount = 0;
+		int iosCount = 0;
+		IOSAFReview curAF = afList.get(afCount);
+		IOSReview curIOS = iOSList.get(iosCount);
+		String iTitle = curIOS.getTitle();
+		String aTitle = curAF.getTitle();
+
+		// loop through both lists & compare each review
+		for (int x = 0; x < afList.size()-1; x++) {
+			if(iOSList.size()-1 > iosCount) { //haven't reached end of iOS list
+			// if either the review's version isn't the current version OR the
+			// review is of the Hilton app
+		//	if (!(curAF.getVersion().equals(curIOS.getVersion()))) {
+				// if latest version isn't reviewed version
+				if ((aTitle.equals(iTitle))) { // the reviews matched exactly, so can keep iterating through both ArrayLists & assign true version to review.
+					curAF.setVersion(curIOS.getVersion());
+//					iosCount++;
+//					curIOS = iOSList.get(iosCount);
+					iosCount++;
+					curIOS = iOSList.get(iosCount);
+					afCount++; // update afCount always to keep moving through ArrayList
+					// containing all reviews
+				
+
+					toReturn.add(curAF); // add double-checked(and possibly modified)
+								// review to toReturn ArrayList
+					curAF = afList.get(afCount);
+					iTitle = curIOS.getTitle();
+					aTitle = curAF.getTitle();
+					
+				} else if(iosTitles.contains(aTitle)){ 
+					iosCount++;
+					curIOS = iOSList.get(iosCount);
+					iTitle = curIOS.getTitle();// otherwise, review is of Hilton app and not HHonors. Only move forward in afList.
+					
+				} else { //curIOS is only on iOS list and not AF, so only iterate through iOS list
+					curAF.setVersion(hiltonVersion);
+					curAF.setType("Hilton");
+					afCount++;
+					toReturn.add(curAF);
+					curAF = afList.get(afCount);
+					aTitle = curAF.getTitle();
+				}
+				//toReturn.add(curAF);
+			} 
+				
+			
+			
+			
+			
+		
+		}
+		return toReturn;
+	}
+
+	/**
+	 * This method creates a text file in the path specified within the method
+	 * and writes the reviews from the data structure which currently contains
+	 * them into that file.
+	 * 
+	 * @param list
+	 *            - data structure containing all downloaded reviews
+	 * @param date
+	 *            - user-specified date; only reviews from this date will be
+	 *            written into text file
+	 * @param instance
+	 *            - integer to allow for multiple files to be written into
+	 *            folder if multiple dates have been specified by the user
+	 */
+	public static void createIOSAFtxt(ArrayList<IOSAFReview> list, String date,
+			int instance) {
+		IOSAFReview current;
+		String curLine;
+
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(
+
+			// ***CHANGE PATH OF CONSTRUCTED TEXT FILE HERE
+			// "P:\\DPI_Mobile Product\\new_iOSreviews" + instance
+			// + ".txt"));
+					"C:\\Users\\madeline2\\Documents\\scrape\\reviews\\new_iOSreviews"
+							+ instance + ".txt")));
+			for (int i = 0; i < list.size(); i++) {
+				current = list.get(i);
+				// ***currently comma-delimited. To change to tab, replace each
+				// comma with "\t".
+				curLine = current.getDate() + "," + current.getTitle() + ",\""
+						+ current.getReview() + "\"," + current.getType() + ","
+						+ current.getVersion() + "," + current.getRating();
+				if (current.getDate().equals(date)) {
+					out.write(curLine);
+					out.newLine();
+				}
+			}
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+
+		}
+	}
+
+}
