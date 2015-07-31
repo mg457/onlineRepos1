@@ -1,0 +1,55 @@
+package getReviews;
+
+import org.w3c.dom.*;
+
+/**
+ * Class for object that stores data retrieved from connecting to the iTunes RSS
+ * feed for the HHonors app. This allows for easy access by other classes of the
+ * different elements of a review.
+ */
+public class IOSReview {
+
+	Node node;
+	NodeList children;
+
+	public IOSReview(Node node) {
+		this.node = node;
+		children = node.getChildNodes();
+	}
+
+	public String getTitle() {
+		return children.item(5).getTextContent();
+	}
+
+	public String getRating() {
+		return children.item(15).getTextContent();
+	}
+
+	public String getReview() {
+		String review = children.item(7).getTextContent();
+		return review;
+	}
+
+	public String getID() {
+		return children.item(3).getTextContent();
+	}
+
+	public String getDate() {
+		String toReturn = "";
+		String raw = children.item(1).getTextContent();
+		String year = raw.substring(0, 4);
+		String month = raw.substring(5, 7);
+		String date = raw.substring(8, 10);
+		toReturn = month + "/" + date + "/" + year;
+		return toReturn;
+	}
+
+	public String getVersion() {
+		return children.item(17).getTextContent();
+	}
+
+	public String getType() {
+		return ("HH");
+	}
+
+}
